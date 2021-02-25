@@ -1,13 +1,12 @@
 from django.conf import settings
 from django.conf.urls import url
 from django.conf.urls.static import static
-from django.urls import path, re_path, include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
-from rest_framework.routers import SimpleRouter, Route, DynamicRoute
+from rest_framework.routers import SimpleRouter, Route, DynamicRoute, DefaultRouter
 
-from .views import UserViewSet
+from .views import UserViewSet, AddressViewSet
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -44,6 +43,8 @@ class CustomUserRouter(SimpleRouter):
 router = CustomUserRouter()
 router.register('users', UserViewSet, basename='users')
 
+r = DefaultRouter()
+r.register('address', AddressViewSet, basename='address')
 
 urlpatterns = [
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -51,6 +52,7 @@ urlpatterns = [
 ]
 
 urlpatterns += router.urls
+urlpatterns += r.urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

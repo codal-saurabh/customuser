@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
+    # 'django_archive',
+    # 'django_table_archive',
 ]
 
 MIDDLEWARE = [
@@ -75,7 +77,15 @@ DATABASES = {
         'PASSWORD': config('PASSWORD'),
         'HOST': '',
         'PORT': ''
-    }
+    },
+    # 'archive': {
+    #     'ENGINE': config('ENGINE', default='django.db.backends.sqlite3'),
+    #     'NAME': 'archive',
+    #     'USER': config('USER'),
+    #     'PASSWORD': config('PASSWORD'),
+    #     'HOST': '',
+    #     'PORT': ''
+    # }
 }
 
 # Password validation
@@ -150,3 +160,19 @@ EMAIL_USE_SSL = False
 # print(EMAIL_HOST_PASSWORD)
 PASSWORD_RESET_TIMEOUT = 86400
 # PASSWORD_RESET_TIMEOUT = 30
+
+# ARCHIVE_EXCLUDE = (
+#     'contenttypes.ContentType',
+#     'sessions.Session',
+#     'auth.Permission',
+# )
+
+# ARCHIVE_DB_ALIAS = 'archive'
+# ARCHIVE_PRIMARY_DB = 'default'
+# ARCHIVE_TABLES = [
+#     {
+#         'table': 'profiles_customuser',
+#         'days_old': '90',
+#         'date_field': 'date_joined'
+#     }
+# ]

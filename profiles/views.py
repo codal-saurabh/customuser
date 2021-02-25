@@ -17,10 +17,10 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from .models import CustomUser
+from .models import CustomUser, Addresses
 from .permissions import UserAccessPermission
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, PasswordSerializer, \
-    ResetPasswordSerializer
+    ResetPasswordSerializer, AddressSerializer
 from .tokens import default_token_generator
 
 
@@ -45,6 +45,8 @@ class UserViewSet(viewsets.ModelViewSet):
             return PasswordSerializer
         if self.action == 'reset_password':
             return ResetPasswordSerializer
+        # if self.action == 'addresses':
+        #     return AddressSerializer
         return UserSerializer
 
     def get_authenticators(self):
@@ -70,6 +72,8 @@ class UserViewSet(viewsets.ModelViewSet):
             return super().get_queryset()
         elif self.action == 'forget_password':
             return super().get_queryset()
+        # elif self.action == 'addresses':
+        #     return Addresses.objects.all()
         else:
             return super().get_queryset().filter(email=self.request.user)
 
@@ -223,3 +227,9 @@ class UserViewSet(viewsets.ModelViewSet):
                     error_msg_list.append(e)
             return Response({'errors': error_msg_list, 'reset_password': self.get_serializer()},
                             template_name='reset_password.html')
+
+
+class AddressViewSet(viewsets.ModelViewSet):
+    queryset = Addresses.objects.all()
+    serializer_class = AddressSerializer
+    http_method_names = ['get', 'post']

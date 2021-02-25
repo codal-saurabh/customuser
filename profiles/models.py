@@ -60,6 +60,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                                      upload_to=user_directory_path)
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
+    addresses = models.ManyToManyField('Addresses', related_name='users_addresses', blank=True)
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -72,3 +74,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 #     if created:
 #         Token.objects.create(user=instance)
 #         print('token generated')
+
+
+class Addresses(models.Model):
+    user_address = models.CharField(max_length=200)
+    objects = models.Manager()

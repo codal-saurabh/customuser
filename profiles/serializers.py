@@ -4,7 +4,7 @@ from django.core import exceptions
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from .models import CustomUser
+from .models import CustomUser, Addresses
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -71,7 +71,18 @@ class LoginSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'profile_image', 'date_joined']
+        fields = ['id', 'email', 'profile_image', 'date_joined', 'addresses']
+        extra_kwargs = {'addresses': {'required': False}}
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    user_address = UserSerializer(many=True, read_only=True)
+
+    class Meta:
+        ordering = ['-id']
+        model = Addresses
+        fields = ['user_address']
+        extra_kwargs = {'user_address': {'required': False}}
 
 
 class PasswordSerializer(serializers.ModelSerializer):
