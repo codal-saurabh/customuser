@@ -60,7 +60,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                                      upload_to=user_directory_path)
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
-    addresses = models.ManyToManyField('Addresses', related_name='users_addresses', blank=True)
+    addresses = models.ManyToManyField('Addresses', related_name='addresses', blank=True)
 
     objects = UserManager()
 
@@ -68,6 +68,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):  # __unicode__ on Python 2
         return self.email
+
 
 # @receiver(post_save, sender=CustomUser)
 # def create_auth_token(sender, instance=None, created=False, **kwargs):
@@ -77,5 +78,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class Addresses(models.Model):
-    user_address = models.CharField(max_length=200)
+    address_line1 = models.CharField(max_length=200)
+    address_line2 = models.CharField(max_length=200)
+    city = models.CharField(max_length=20)
+    state = models.CharField(max_length=20)
+    country = models.CharField(max_length=20)
+    zipcode = models.CharField(max_length=7)
     objects = models.Manager()
+
+    def __str__(self):
+        return self.address_line1

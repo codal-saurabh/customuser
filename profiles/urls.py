@@ -6,7 +6,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from rest_framework.routers import SimpleRouter, Route, DynamicRoute, DefaultRouter
 
-from .views import UserViewSet, AddressViewSet
+from .views import UserViewSet
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -37,14 +37,19 @@ class CustomUserRouter(SimpleRouter):
             detail=False,
             initkwargs={}
         ),
+        # Dynamically generated detail routes. Generated using
+        # @action(detail=True) decorator on methods of the viewset.
+        DynamicRoute(
+            url=r'^{prefix}/{url_path}/{lookup}{trailing_slash}$',
+            name='{basename}-{url_name}',
+            detail=True,
+            initkwargs={}
+        ),
     ]
 
 
 router = CustomUserRouter()
 router.register('users', UserViewSet, basename='users')
-
-r = DefaultRouter()
-r.register('address', AddressViewSet, basename='address')
 
 urlpatterns = [
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -52,7 +57,6 @@ urlpatterns = [
 ]
 
 urlpatterns += router.urls
-urlpatterns += r.urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

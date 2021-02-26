@@ -68,21 +68,38 @@ class LoginSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ['id', 'email', 'profile_image', 'date_joined', 'addresses']
-        extra_kwargs = {'addresses': {'required': False}}
-
-
 class AddressSerializer(serializers.ModelSerializer):
-    user_address = UserSerializer(many=True, read_only=True)
-
     class Meta:
         ordering = ['-id']
         model = Addresses
-        fields = ['user_address']
-        extra_kwargs = {'user_address': {'required': False}}
+        fields = '__all__'
+        # extra_kwargs = {'user_address': {'required': False}}
+
+
+class UserSerializer(serializers.ModelSerializer):
+    addresses = AddressSerializer(many=True, read_only=True)
+    # address = serializers.CharField(max_length=200, allow_blank=True, required=False)
+    address_line1 = serializers.CharField(max_length=200, allow_blank=True, required=False)
+    address_line2 = serializers.CharField(max_length=200, allow_blank=True, required=False)
+    city = serializers.CharField(max_length=20, allow_blank=True, required=False)
+    state = serializers.CharField(max_length=20, allow_blank=True, required=False)
+    country = serializers.CharField(max_length=20, allow_blank=True, required=False)
+    zipcode = serializers.CharField(max_length=7, allow_blank=True, required=False)
+
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'email', 'profile_image', 'date_joined', 'addresses',
+                  'address_line1', 'address_line2', 'city', 'state', 'country', 'zipcode']
+        extra_kwargs = {'addresses': {'required': False}, 'profile_image': {'required': False}}
+
+    # def update(self, instance, validated_data):
+    #     print(validated_data)
+    #     address_data = validated_data.pop('address')
+    #     address = Addresses.objects.create(user_address=address_data)
+    #     instance.addresses.add(address)
+    #     print(instance.addresses.all())
+    #     instance.save()
+    #     return instance
 
 
 class PasswordSerializer(serializers.ModelSerializer):

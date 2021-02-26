@@ -29,8 +29,8 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [UserAccessPermission]
     authentication_classes = [TokenAuthentication]
-    parser_classes = [MultiPartParser]
-    http_method_names = ['get', 'patch', 'post']
+    parser_classes = [MultiPartParser, FormParser]
+    http_method_names = ['get', 'patch', 'post', 'delete']
 
     lookup_field = 'pk'
     lookup_value_regex = '[0-9]+'
@@ -57,8 +57,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         # print(self.action)
-        # if self.action == 'register':
-        #     return []
         if self.action == 'login':
             return []
         elif self.action == 'forget_password':
@@ -101,9 +99,11 @@ class UserViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         self.check_object_permissions(request, instance)
         response = super(UserViewSet, self).update(request, *args, **kwargs)
-        print(response.data['profile_image'])
-        return Response({'Update': instance.email, 'Profile Image': response.data['profile_image']},
+        # print(response.data['profile_image'])
+        return Response({'Update': instance.email, 'Profile Image': response.data['profile_image'],
+                         'Address': response.data['addresses']},
                         status=status.HTTP_202_ACCEPTED)
+        # return Response({'Update': instance.email}, status=status.HTTP_202_ACCEPTED)
 
     @action(detail=False, methods=['get'], url_path='me', url_name='me')
     def me(self, request):
@@ -114,6 +114,21 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.get_serializer(self.get_queryset(), many=True)
         return Response({"Message": "Hello Good Morning", "content": content, "user": user.data},
                         status=status.HTTP_200_OK)
+
+    # @action(detail=True, methods=['delete'], url_path='address', url_name='address',)
+    # def address(self, request, pk):
+    #     print(request.user)
+    #     print(pk)
+    #     try:
+    #         # qs = Addresses.objects.filter(id=pk)
+    #         match = Addresses.objects.get(id=pk)
+    #         # print(qs)
+    #         print(type(match))
+    #     except (AttributeError, ObjectDoesNotExist):
+    #         return Response({'result': 'No address'}, status=status.HTTP_404_NOT_FOUND)
+    #     request.user.addresses.remove(match)
+    #     match.delete()
+    #     return Response({"Message": "address delete"}, status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='logout', url_name='logout')
     def logout(self, request):
@@ -132,7 +147,7 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             qs = self.get_queryset().filter(email=email)
             match = self.get_queryset().get(email=email)
-        except CustomUser.DoesNotExist:
+        except (AttributeError, ObjectDoesNotExist):
             return Response({'result': 'Email not registered'}, status=status.HTTP_404_NOT_FOUND)
         if len(qs) > 0:
             user = qs[0]
@@ -227,9 +242,3 @@ class UserViewSet(viewsets.ModelViewSet):
                     error_msg_list.append(e)
             return Response({'errors': error_msg_list, 'reset_password': self.get_serializer()},
                             template_name='reset_password.html')
-
-
-class AddressViewSet(viewsets.ModelViewSet):
-    queryset = Addresses.objects.all()
-    serializer_class = AddressSerializer
-    http_method_names = ['get', 'post']
