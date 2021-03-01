@@ -1,12 +1,14 @@
 from django.conf import settings
 from django.conf.urls import url
 from django.conf.urls.static import static
+from django.urls import path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
-from rest_framework.routers import SimpleRouter, Route, DynamicRoute, DefaultRouter
+from rest_framework.routers import SimpleRouter, Route, DynamicRoute
+from rest_framework.urlpatterns import format_suffix_patterns
 
-from .views import UserViewSet
+from .views import UserViewSet, manage_items
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -54,9 +56,13 @@ router.register('users', UserViewSet, basename='users')
 urlpatterns = [
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     # path('', include((router.urls, 'customusers'), namespace='users')),
+    path('items/', manage_items, name='items'),
+    path('items/<slug:key>', manage_items, name='single_items')
 ]
 
 urlpatterns += router.urls
+
+# urlpatterns = format_suffix_patterns(urlpatterns)
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

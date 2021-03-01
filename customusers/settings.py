@@ -44,6 +44,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+
 ]
 
 ROOT_URLCONF = 'customusers.urls'
@@ -176,3 +178,6 @@ PASSWORD_RESET_TIMEOUT = 86400
 #         'date_field': 'date_joined'
 #     }
 # ]
+
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379

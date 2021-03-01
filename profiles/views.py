@@ -1,5 +1,7 @@
+import json
 import smtplib
 
+import redis
 from django.conf import settings
 from django.contrib.auth.models import update_last_login
 from django.contrib.sites.shortcuts import get_current_site
@@ -12,7 +14,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
@@ -250,3 +252,32 @@ class UserViewSet(viewsets.ModelViewSet):
                     error_msg_list.append(e)
             return Response({'errors': error_msg_list, 'reset_password': self.get_serializer()},
                             template_name='reset_password.html')
+
+
+redis_instance = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
+
+
+@api_view(['GET', 'POST'])
+def manage_items(request, *args, **kwargs):
+    if request.method == 'POST':
+        item = json.loads(request.body)
+        key = list(item.keys())[0]
+        values = item[key]
+        redis_instance.set(key, values)
+        response = {
+            'msg': f"{key} success set to {values}"
+        }
+        return Response(response, 201)
+    elif request.method == 'GET':
+        items = {}
+        count = 0
+        for key in redis_instance.keys("*"):
+            print(redis_instance.get(key))
+            items[key] = redis_instance.get(key)
+            count += 1
+        response = {
+            'count': count,
+            'msg': f"Found {count} items.",
+            'items': items
+        }
+        return Response(response, status=200)
