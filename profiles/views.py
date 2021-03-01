@@ -13,7 +13,7 @@ from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 
@@ -29,7 +29,8 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [UserAccessPermission]
     authentication_classes = [TokenAuthentication]
-    parser_classes = [MultiPartParser, FormParser]
+    # parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [JSONParser]
     http_method_names = ['get', 'patch', 'post', 'delete']
 
     lookup_field = 'pk'
@@ -97,11 +98,18 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        context = {"address": request.data.get('address')}
+        # print(context)
         self.check_object_permissions(request, instance)
-        response = super(UserViewSet, self).update(request, *args, **kwargs)
-        # print(response.data['profile_image'])
-        return Response({'Update': instance.email, 'Profile Image': response.data['profile_image'],
-                         'Address': response.data['addresses']},
+        serializer = self.get_serializer(instance, data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+        return Response({'Update': instance.email, 'Profile Image': serializer.data['profile_image'],
+                         'Address': serializer.data['addresses']},
                         status=status.HTTP_202_ACCEPTED)
         # return Response({'Update': instance.email}, status=status.HTTP_202_ACCEPTED)
 

@@ -1,6 +1,7 @@
 import django.contrib.auth.password_validation as validators
 from django.contrib.auth import authenticate
 from django.core import exceptions
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -75,31 +76,55 @@ class AddressSerializer(serializers.ModelSerializer):
         fields = '__all__'
         # extra_kwargs = {'user_address': {'required': False}}
 
+    def create(self, validated_data):
+        instance, created = Addresses.objects.get_or_create(**validated_data)
+        # print(instance.id)
+        return instance
+
 
 class UserSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, read_only=True)
-    # address = serializers.CharField(max_length=200, allow_blank=True, required=False)
-    address_line1 = serializers.CharField(max_length=200, allow_blank=True, required=False)
-    address_line2 = serializers.CharField(max_length=200, allow_blank=True, required=False)
-    city = serializers.CharField(max_length=20, allow_blank=True, required=False)
-    state = serializers.CharField(max_length=20, allow_blank=True, required=False)
-    country = serializers.CharField(max_length=20, allow_blank=True, required=False)
-    zipcode = serializers.CharField(max_length=7, allow_blank=True, required=False)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'profile_image', 'date_joined', 'addresses',
-                  'address_line1', 'address_line2', 'city', 'state', 'country', 'zipcode']
+        fields = ['id', 'email', 'profile_image', 'date_joined', 'addresses', ]
+        # 'address_line1', 'address_line2', 'city', 'state', 'country', 'zipcode']
         extra_kwargs = {'addresses': {'required': False}, 'profile_image': {'required': False}}
 
-    # def update(self, instance, validated_data):
-    #     print(validated_data)
-    #     address_data = validated_data.pop('address')
-    #     address = Addresses.objects.create(user_address=address_data)
-    #     instance.addresses.add(address)
-    #     print(instance.addresses.all())
-    #     instance.save()
-    #     return instance
+    def update(self, instance, validated_data):
+        address_data = list(self.context.get('address'))
+        address_serializer = AddressSerializer(many=True, data=address_data)
+        address_serializer.is_valid(raise_exception=True)
+        address_obj = address_serializer.save()
+        user_address_update_id = list(x.id for x in address_obj)
+        # print(x)
+        remove = []
+        address_original_list = {}
+        user_address_data_id = list(instance.addresses.values_list("id", flat=True))
+        print(address_original_list)
+        print(user_address_data_id)
+        for y in user_address_data_id:
+            if y not in user_address_update_id:
+                remove.append(y)
+        print(remove)
+        for z in Addresses.objects.values_list("id", flat=True):
+            # print(z)
+            count = Addresses.objects.get(id=z).addresses.count()
+            # print(count)
+            address_original_list[z] = count
+            if z in remove and count > 1:
+                remove.remove(z)
+        print(remove)
+        instance.addresses.set(user_address_update_id)
+        instance.save()
+        for i in remove:
+            try:
+                match = Addresses.objects.get(id=i)
+                print(type(match))
+            except (AttributeError, ObjectDoesNotExist):
+                return print('no address at id {}'.format(i))
+            match.delete()
+        return instance
 
 
 class PasswordSerializer(serializers.ModelSerializer):
